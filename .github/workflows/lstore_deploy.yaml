@@ -1,0 +1,26 @@
+name: FStore Deploy (Nuxt - Prebuilt)
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Deploy to local server
+        run: |
+          sudo rsync -avz --delete --exclude='.git' ./ /var/www/popl.co/public_html/fpopl/
+          sudo chmod -R 770 /var/www/popl.co/public_html/fpopl
+          sudo chown -R www-data:www-data /var/www/popl.co/public_html/fpopl
+      - name: Enable site and restart Apache
+        run: |
+          sudo a2dissite nemoonehshow.ir.conf
+          sudo a2ensite nemoonehshow.ir.conf
+          sudo systemctl restart apache2
+      - name: Check application health
+        run: curl -f http://193.105.234.8/health-check
