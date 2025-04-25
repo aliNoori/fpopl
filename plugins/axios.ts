@@ -4,7 +4,8 @@ import axios from 'axios'
 
 export default defineNuxtPlugin((nuxtApp) => {
     const api = axios.create({
-        baseURL: 'http://127.0.0.1:8000/api/', // Base URL for the API
+        //baseURL: 'http://127.0.0.1:8000/api/', // Base URL for the API
+        baseURL: 'https://www.nemoonehshow.ir/popl/api/', // Base URL for the API
     })
 
     api.interceptors.request.use(config => {
