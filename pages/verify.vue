@@ -81,6 +81,8 @@ async function handleInput(event: Event, index: number) {
             maxlength="1"
             class="input-field"
             type="text"
+            inputmode="numeric"
+            autocomplete="off"
             @input="(e) => handleInput(e, i - 1)"
         />
       </div>
