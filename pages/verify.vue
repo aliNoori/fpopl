@@ -28,37 +28,68 @@ function toEnglishDigits(str: string): string {
 // Handle input of each digit field
 async function handleInput(event: Event, index: number) {
   const input = event.target as HTMLInputElement
-  const value = input.value.replace(/[^0-9]/g, '') // Allow only numbers
+  const value = input.value.replace(/[^0-9]/g, '') // Allow only numeric input
 
   if (value) {
-    code.value[index] = value // Set the current digit
-    input.value = $toPersian(value) // Show Persian digit
+    code.value[index] = value // Set the value for the current input field
+    input.value = $toPersian(value) // Display the Persian version of the number
 
-    // Move to the next input field
+    // Move focus to the next input field
     const nextInput = input.nextElementSibling as HTMLInputElement
     if (nextInput) nextInput.focus()
   }
 
-  // If all code inputs are filled, verify the code
+  // If all code fields are filled, proceed with verification
   if (code.value.every(c => c !== '')) {
     try {
-      const fullCode = code.value.join('')
+      const fullCode = code.value.join('') // Combine all the entered digits
       const response = await $axios.post('/auth/verify-code', {
         code: fullCode,
         phone: phoneNumber,
         country: countryCode
       })
 
-      // Save the token and redirect to welcome page
-      const token = response.data.token
-      authStore.setToken(token)
-      localStorage.setItem('auth_token', authStore.token)
-      await router.push('/welcome')
+      // Check response status and take appropriate action
+      switch (response.status) {
+        case 200:
+          console.log('کاربر از قبل وجود دارد:', response.data.user) // Log user info
+          alert('کاربر از قبل وجود دارد. خوش آمدید!')
+          await router.push('/') // Redirect to welcome page
+          break
+        case 201:
+          console.log('کاربر جدید با موفقیت ایجاد شد') // Handle new user creation
+          const token = response.data.token
+          authStore.setToken(token) // Save the token
+          localStorage.setItem('auth_token', authStore.token) // Store token locally
+          await router.push('/welcome') // Redirect to welcome page
+          break
+        case 422:
+          console.error('کد نامعتبر یا منقضی شده است') // Handle invalid or expired code
+          alert('کد نامعتبر یا منقضی شده است. لطفاً دوباره تلاش کنید.')
+          break
+        default:
+          console.error('پاسخ غیرمنتظره:', response) // Handle unexpected response
+          alert('خطایی رخ داده است. لطفاً بعداً تلاش کنید.')
+      }
     } catch (error) {
-      console.error('خطا در ارسال کد:', error) // Log the error
+      if (error.response) {
+        switch (error.response.status) {
+          case 409:
+            console.error('تعارض: کاربر از قبل وجود دارد') // Handle conflict response
+            alert('کاربر از قبل وجود دارد!')
+            break
+          default:
+            console.error('خطا در فرایند تأیید:', error) // General error handling
+            alert('خطایی رخ داده است. لطفاً بعداً تلاش کنید.')
+        }
+      } else {
+        console.error('خطای شبکه یا سرور:', error) // Handle network/server error
+        alert('اتصال به سرور برقرار نشد. لطفاً اینترنت خود را بررسی کنید.')
+      }
     }
   }
 }
+
 </script>
 <template>
   <div class="container">
